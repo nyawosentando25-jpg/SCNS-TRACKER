@@ -1,0 +1,6 @@
+{
+  "name": "SCNS Records",
+  "description": "Learner records, attendance register, fee payment tracking, exam marks, and school progress report app for SCNS Tutorial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

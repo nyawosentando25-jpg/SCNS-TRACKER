@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">SCNS Records</string>
+    <string name="org_title">SCNS TUTORIAL</string>
+    <string name="org_subtitle">SEKWANELE CROSSNIGHTS • EST. 2027</string>
+    <string name="org_venue">eZimisele Primary, Umlazi D</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="cd_scns_logo">SCNS Tutorial Sekwanele Crossnights emblem</string>
+    <string name="cd_nav_home">Home</string>
+    <string name="cd_nav_learners">Learners</string>
+    <string name="cd_nav_upload">Upload Photo</string>
+    <string name="cd_nav_exams">Exams</string>
+    <string name="cd_nav_export">Export and Save</string>
+</resources>

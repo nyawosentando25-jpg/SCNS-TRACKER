@@ -1,0 +1,160 @@
+{
+  "entities": {
+    "ChairpersonConfig": {
+      "title": "ChairpersonConfig",
+      "description": "SCNS chairperson contact details, OTP sender setting, and 7-day trial state",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "chairName": { "type": "string" },
+        "chairCell": { "type": "string" },
+        "prevChairCell": { "type": "string" },
+        "prevCellUntilMs": { "type": "number" },
+        "otpSender": { "type": "string" },
+        "trialStartMs": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "chairName",
+        "chairCell",
+        "prevChairCell",
+        "prevCellUntilMs",
+        "otpSender",
+        "trialStartMs",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ExecutiveMember": {
+      "title": "ExecutiveMember",
+      "description": "SCNS executive committee member profile (max 4 per workspace)",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "surname": { "type": "string" },
+        "idNumber": { "type": "string" },
+        "cell": { "type": "string" },
+        "pin": { "type": "string" },
+        "role": { "type": "string" },
+        "approved": { "type": "boolean" },
+        "otp": { "type": "string" },
+        "otpPending": { "type": "boolean" },
+        "termLabel": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "surname",
+        "idNumber",
+        "cell",
+        "pin",
+        "role",
+        "approved",
+        "otp",
+        "otpPending",
+        "termLabel",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LearnerRecord": {
+      "title": "LearnerRecord",
+      "description": "SCNS learner registration, attendance logs, fee payments, and term exam marks",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "regNo": { "type": "string" },
+        "names": { "type": "string" },
+        "surname": { "type": "string" },
+        "grade": { "type": "string" },
+        "school": { "type": "string" },
+        "sex": { "type": "string" },
+        "race": { "type": "string" },
+        "dob": { "type": "string" },
+        "age": { "type": "string" },
+        "admDate": { "type": "string" },
+        "subjects": { "type": "string" },
+        "status": { "type": "string" },
+        "depPaid": { "type": "boolean" },
+        "depDate": { "type": "string" },
+        "parent": { "type": "string" },
+        "docRef": { "type": "string" },
+        "att": { "type": "array" },
+        "pay": { "type": "array" },
+        "exams": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "regNo",
+        "names",
+        "surname",
+        "grade",
+        "school",
+        "sex",
+        "race",
+        "dob",
+        "age",
+        "admDate",
+        "subjects",
+        "status",
+        "depPaid",
+        "depDate",
+        "parent",
+        "docRef",
+        "att",
+        "pay",
+        "exams",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ManualSaveSnapshot": {
+      "title": "ManualSaveSnapshot",
+      "description": "Manual JSON backup snapshot of SCNS learner records",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "label": { "type": "string" },
+        "savedAtDisplay": { "type": "string" },
+        "learnerCount": { "type": "number" },
+        "totalCollected": { "type": "number" },
+        "snapshotJson": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "ownerId",
+        "label",
+        "savedAtDisplay",
+        "learnerCount",
+        "totalCollected",
+        "snapshotJson",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/ChairpersonConfig" },
+      "description": "Chairperson & trial configuration scoped to signed-in owner"
+    },
+    "/users/{userId}/executives/{execId}": {
+      "schema": { "$ref": "#/entities/ExecutiveMember" },
+      "description": "SCNS executive committee members (up to 4) scoped to signed-in owner"
+    },
+    "/users/{userId}/learners/{learnerId}": {
+      "schema": { "$ref": "#/entities/LearnerRecord" },
+      "description": "Learner records including attendance, payments, and exams scoped to signed-in owner"
+    },
+    "/users/{userId}/manualSaves/{saveId}": {
+      "schema": { "$ref": "#/entities/ManualSaveSnapshot" },
+      "description": "Manual backup snapshots scoped to signed-in owner"
+    }
+  }
+}

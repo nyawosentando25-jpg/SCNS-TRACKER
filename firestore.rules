@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_.-]+$');
+    }
+
+    function strRange(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidChairpersonConfig(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'chairName', 'chairCell', 'prevChairCell',
+          'prevCellUntilMs', 'otpSender', 'trialStartMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'chairName', 'chairCell', 'prevChairCell',
+          'prevCellUntilMs', 'otpSender', 'trialStartMs', 'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId == userId &&
+        strRange(data.chairName, 1, 100) &&
+        strRange(data.chairCell, 1, 30) &&
+        strRange(data.prevChairCell, 0, 30) &&
+        data.prevCellUntilMs is number && data.prevCellUntilMs >= 0 &&
+        data.otpSender in ['Chairperson', 'Secretary', 'Treasurer', 'Any Executive'] &&
+        data.trialStartMs is number && data.trialStartMs >= 0 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidExecutiveMember(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'name', 'surname', 'idNumber', 'cell', 'pin',
+          'role', 'approved', 'otp', 'otpPending', 'termLabel', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'name', 'surname', 'idNumber', 'cell', 'pin',
+          'role', 'approved', 'otp', 'otpPending', 'termLabel', 'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId == userId &&
+        strRange(data.name, 1, 80) &&
+        strRange(data.surname, 1, 80) &&
+        strRange(data.idNumber, 0, 13) &&
+        strRange(data.cell, 1, 30) &&
+        data.pin is string && data.pin.size() == 4 &&
+        data.role in [
+          'Chairperson',
+          'Secretary',
+          'Treasurer',
+          'Marketing & Media Officer / Coordinator'
+        ] &&
+        data.approved is bool &&
+        strRange(data.otp, 0, 10) &&
+        data.otpPending is bool &&
+        strRange(data.termLabel, 0, 30) &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidLearnerRecord(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'regNo', 'names', 'surname', 'grade', 'school',
+          'sex', 'race', 'dob', 'age', 'admDate', 'subjects', 'status',
+          'depPaid', 'depDate', 'parent', 'docRef', 'att', 'pay', 'exams',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'regNo', 'names', 'surname', 'grade', 'school',
+          'sex', 'race', 'dob', 'age', 'admDate', 'subjects', 'status',
+          'depPaid', 'depDate', 'parent', 'docRef', 'att', 'pay', 'exams',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.ownerId == userId &&
+        strRange(data.regNo, 1, 40) &&
+        strRange(data.names, 1, 100) &&
+        strRange(data.surname, 1, 100) &&
+        data.grade in ['8', '9', '10', '11', '12'] &&
+        strRange(data.school, 0, 120) &&
+        strRange(data.sex, 0, 30) &&
+        strRange(data.race, 0, 40) &&
+        strRange(data.dob, 0, 20) &&
+        strRange(data.age, 0, 10) &&
+        strRange(data.admDate, 0, 20) &&
+        strRange(data.subjects, 0, 400) &&
+        data.status in ['Accepted', 'Rejected', 'Waiting List'] &&
+        data.depPaid is bool &&
+        strRange(data.depDate, 0, 20) &&
+        strRange(data.parent, 0, 150) &&
+        strRange(data.docRef, 0, 200) &&
+        data.att is list && data.att.size() <= 400 &&
+        data.pay is list && data.pay.size() <= 200 &&
+        data.exams is map && data.exams.size() <= 60 &&
+        data.createdAt is timestamp && data.createdAt <= request.time &&
+        data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidManualSaveSnapshot(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'label', 'savedAtDisplay', 'learnerCount',
+          'totalCollected', 'snapshotJson', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'ownerId', 'label', 'savedAtDisplay', 'learnerCount',
+          'totalCollected', 'snapshotJson', 'createdAt'
+        ]) &&
+        data.ownerId == userId &&
+        strRange(data.label, 1, 120) &&
+        strRange(data.savedAtDisplay, 1, 60) &&
+        data.learnerCount is number && data.learnerCount >= 0 &&
+        data.totalCollected is number && data.totalCollected >= 0 &&
+        strRange(data.snapshotJson, 1, 900000) &&
+        data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId}/settings/{settingId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && settingId == 'chairperson' &&
+        isValidChairpersonConfig(request.resource.data, userId);
+      allow update: if isOwner(userId) && settingId == 'chairperson' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'chairName', 'chairCell', 'prevChairCell',
+          'prevCellUntilMs', 'otpSender', 'trialStartMs', 'updatedAt'
+        ]) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        isValidChairpersonConfig(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/executives/{execId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(execId) &&
+        isValidExecutiveMember(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidId(execId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'surname', 'idNumber', 'cell', 'pin',
+          'role', 'approved', 'otp', 'otpPending', 'termLabel', 'updatedAt'
+        ]) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        isValidExecutiveMember(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/learners/{learnerId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(learnerId) &&
+        isValidLearnerRecord(request.resource.data, userId);
+      allow update: if isOwner(userId) && isValidId(learnerId) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'regNo', 'names', 'surname', 'grade', 'school',
+          'sex', 'race', 'dob', 'age', 'admDate', 'subjects', 'status',
+          'depPaid', 'depDate', 'parent', 'docRef', 'att', 'pay', 'exams', 'updatedAt'
+        ]) &&
+        request.resource.data.ownerId == resource.data.ownerId &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        isValidLearnerRecord(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/manualSaves/{saveId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(saveId) &&
+        isValidManualSaveSnapshot(request.resource.data, userId);
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
